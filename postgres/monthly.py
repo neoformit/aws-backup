@@ -7,7 +7,7 @@ from operator import itemgetter
 from datetime import datetime, timedelta
 
 from . import s3
-from .config import WEEKLY_PREFIX, MONTHLY_PREFIX, MONTHS, S3_PATH
+from config import WEEKLY_PREFIX, MONTHLY_PREFIX, MONTHS, S3_POSTGRES_PATH
 
 
 def make():
@@ -56,6 +56,6 @@ def create_monthly_from_weekly():
     new_fname = oldest.replace(WEEKLY_PREFIX, MONTHLY_PREFIX)
     print(f'Creating monthly backup file {new_fname} from weekly backup {oldest}')
     s3.copy(
-        os.path.join(S3_PATH, oldest),
-        os.path.join(S3_PATH, new_fname),
+        os.path.join(S3_POSTGRES_PATH, oldest),
+        os.path.join(S3_POSTGRES_PATH, new_fname),
     )

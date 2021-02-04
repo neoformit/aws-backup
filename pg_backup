@@ -33,4 +33,4 @@ echo "Cascading backups..."
 echo ""
 
 # Cascade backups to daily, weekly and monthly
-./postgres/backup.py
+./backup.py

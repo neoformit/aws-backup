@@ -4,7 +4,7 @@ import os
 import subprocess
 from datetime import datetime
 
-from .config import S3_PATH
+from config import S3_POSTGRES_PATH
 
 
 def read(contains=None):
@@ -13,7 +13,7 @@ def read(contains=None):
         'aws',
         's3',
         'ls',
-        S3_PATH,
+        S3_POSTGRES_PATH,
     ]
     files = {}
     result = subprocess.run(args, stdout=subprocess.PIPE, check=True)
@@ -48,11 +48,11 @@ def copy(source, dest):
 
 
 def remove(path):
-    """Remove specified filename from S3 storage under S3_PATH."""
+    """Remove specified filename from S3 storage under S3_POSTGRES_PATH."""
     args = [
         'aws',
         's3',
         'rm',
-        os.path.join(S3_PATH, path),
+        os.path.join(S3_POSTGRES_PATH, path),
     ]
     subprocess.run(args, check=True)

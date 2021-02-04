@@ -4,8 +4,8 @@
 
 from datetime import date
 from notifications import send_mail
-from backup import daily, weekly, monthly
-from backup.config import WEEKLY_BACKUP_WEEKDAY, MONTHLY_BACKUP_DAY
+from postgres import daily, weekly, monthly
+from config import WEEKLY_BACKUP_WEEKDAY, MONTHLY_BACKUP_DAY
 
 today = date.today()
 

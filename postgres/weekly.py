@@ -6,8 +6,8 @@ import os
 from operator import itemgetter
 from datetime import datetime, timedelta
 
-from .import s3
-from .config import WEEKS, DAILY_PREFIX, WEEKLY_PREFIX, S3_PATH
+from . import s3
+from config import WEEKS, DAILY_PREFIX, WEEKLY_PREFIX, S3_POSTGRES_PATH
 
 
 def make():
@@ -46,6 +46,6 @@ def create_weekly_from_daily():
     new_fname = oldest.replace(DAILY_PREFIX, WEEKLY_PREFIX)
     print(f"Creating weekly backup file {new_fname} from daily file {oldest}")
     s3.copy(
-        os.path.join(S3_PATH, oldest),
-        os.path.join(S3_PATH, new_fname),
+        os.path.join(S3_POSTGRES_PATH, oldest),
+        os.path.join(S3_POSTGRES_PATH, new_fname),
     )

@@ -5,7 +5,7 @@
 from datetime import datetime, timedelta
 
 from . import s3
-from .config import DAILY_PREFIX, DAYS
+from config import DAILY_PREFIX, DAYS
 
 
 def make():

@@ -1,7 +1,8 @@
 """Postgres backup configuration."""
 
 # AWS S3 path for backup location
-S3_PATH = 's3://neoform-backup/postgresql/'
+S3_FILES_PATH = 's3://neoform-backup/filesystem/'
+S3_POSTGRES_PATH = 's3://neoform-backup/postgresql/'
 
 # Number of backups at each level
 DAYS = 7
