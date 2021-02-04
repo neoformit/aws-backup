@@ -25,9 +25,4 @@ try:
     print()
 
 except Exception as exc:
-    send_mail(
-        ['Cameron Hyde <chyde@neoformit.com>'],
-        'Neoform Server <server@neoformit.com>',
-        'PG backup error',
-        f'The following error was encountered running pg_backup:\n{exc}'
-    )
+    send_mail(f'The following error was encountered:\n\n{exc}')
