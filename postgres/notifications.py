@@ -1,23 +1,18 @@
 """Send email to admin."""
 
+import ssl
 import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from email.Utils import COMMASPACE, formatdate
+
+port = 587
+password = None
+smtp_server = "localhost"
+sender_email = "dev@neoformit.com"
+recipient_email = "chyde@neoformit.com"
 
 
-def send_mail(to, frm, subject, body, server="localhost"):
+def send_mail(message):
     """Dispatch mail with given content and recipient(s)."""
-    assert type(to) == list
-
-    msg = MIMEMultipart()
-    msg['From'] = frm
-    msg['To'] = COMMASPACE.join(to)
-    msg['Date'] = formatdate(localtime=True)
-    msg['Subject'] = subject
-
-    msg.attach(MIMEText(body))
-
-    smtp = smtplib.SMTP(server)
-    smtp.sendmail(frm, to, msg.as_string())
-    smtp.close()
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, recipient_email, message)
