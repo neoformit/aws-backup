@@ -13,7 +13,7 @@ Automatic archiving of database and file system backups to AWS S3 storage
 
 ## PostgreSQL backup setup
 
-We are assuming that there is a Postgresql cluster running that is accessible with the `pg_dumpall` command, which is used to create a DB dump of all databases on the cluster. You will also need to ensure that `awscli` is configured and accessible for the `postgres` user (or any Postgresql superuser).
+We are assuming that there is a Postgresql cluster running that is accessible with the `pg_dumpall` command, which is used to create a DB dump of all databases on the cluster. You will also need to ensure that `awscli` is configured and accessible for the `postgres` user (or any Postgresql superuser), and that the `postgres` dir is writable by that user.
 
 When run, the `postgres/pg_backup` will gzip the DB dump and send it to AWS S3 storage. It will copy existing backup files to create the specified weekly and monthly backups, before cleaning up old backup files.
 
