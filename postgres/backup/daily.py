@@ -4,8 +4,8 @@
 
 from datetime import datetime, timedelta
 
-import s3
-from config import DAILY_PREFIX, DAYS
+from . import s3
+from .config import DAILY_PREFIX, DAYS
 
 
 def make():
@@ -16,7 +16,7 @@ def make():
         print(f'{k.ljust(30)} | {v.strftime("%Y-%m-%d %H:%M:%S")}')
     print()
 
-    n_days_ago = datetime.now() - timedelta(days=DAYS + 1)
+    n_days_ago = datetime.now() - timedelta(days=DAYS)
     old_files = {
         k: v for k, v in files.items()
         if v < n_days_ago

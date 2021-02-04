@@ -6,8 +6,8 @@ import os
 from operator import itemgetter
 from datetime import datetime, timedelta
 
-import s3
-from config import WEEKLY_PREFIX, MONTHLY_PREFIX, MONTHS, S3_PATH
+from . import s3
+from .config import WEEKLY_PREFIX, MONTHLY_PREFIX, MONTHS, S3_PATH
 
 
 def make():
@@ -16,15 +16,20 @@ def make():
     print("Monthly backup files currently in S3 storage:")
     for k, v in files.items():
         print(f'{k.ljust(30)} | {v.strftime("%Y-%m-%d %H:%M:%S")}')
-    print()
-    n_months_ago = datetime.now() - timedelta(days=MONTHS + 1)
+    if files:
+        print()
+    else:
+        print("None")
+
+    create_monthly_from_weekly()
+
+    n_months_ago = datetime.now() - timedelta(days=MONTHS)
     old_files = {
         k: v for k, v in files.items()
         if v < n_months_ago
     }
 
     if old_files:
-        create_monthly_from_weekly(files)
         print(
             "Removing old files from S3 storage:\n"
             + ' '.join(old_files.keys())
@@ -37,18 +42,20 @@ def make():
         print("No old files to remove")
 
 
-def create_monthly_from_weekly(files):
+def create_monthly_from_weekly():
     """Copy lastest weekly backup to convert to monthly backup."""
     weekly_files = s3.read(contains=WEEKLY_PREFIX)
+    if not weekly_files:
+        print("Can't make monthly backup, no weekly backups yet.")
+        return
     files_by_date = sorted(
         list(weekly_files.items()),
         key=itemgetter(1),
-        reverse=True,
     )
-    newest = files_by_date[0][0]
-    print(f'Creating monthly backup from {newest}')
-    new_fname = newest.replace(WEEKLY_PREFIX, MONTHLY_PREFIX)
+    oldest = files_by_date[0][0]
+    new_fname = oldest.replace(WEEKLY_PREFIX, MONTHLY_PREFIX)
+    print(f'Creating monthly backup file {new_fname} from weekly backup {oldest}')
     s3.copy(
-        os.path.join(S3_PATH, newest),
+        os.path.join(S3_PATH, oldest),
         os.path.join(S3_PATH, new_fname),
     )

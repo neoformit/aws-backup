@@ -3,8 +3,12 @@
 # This file should be configured to run with crontab like so, with logging
 # being echoed to the designated log file path:
 
-# WDIR=/mnt/vdisk/postgresql/backup
+# WDIR=/mnt/vdisk/postgresql/backup  # << The current directory
 # 30 12 * * * $WDIR/pg_backup.sh > $WDIR/backup.log 2>&1
+
+if [ -z $WDIR ]; then
+	WDIR=$PWD
+fi
 
 export HOME=/var/lib/postgresql
 export PATH=$PATH:/usr/local/bin
@@ -24,4 +28,4 @@ aws s3 mv $fname s3://neoform-backup/postgresql/$fname
 echo "Done"
 
 # Cascade backups to daily, weekly and monthly
-echo `./backup/backup.py`
+./backup.py

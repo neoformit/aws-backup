@@ -4,7 +4,7 @@ import os
 import subprocess
 from datetime import datetime
 
-from config import S3_PATH
+from .config import S3_PATH
 
 
 def read(contains=None):
@@ -20,6 +20,8 @@ def read(contains=None):
     file_lines = result.stdout.decode('utf-8').split('\n')
 
     for line in file_lines:
+        if not line:
+            continue
         cols = [x for x in line.split(' ') if x]
         timestamp = datetime.strptime(' '.join(cols[:2]), '%Y-%m-%d %H:%M:%S')
         filename = cols[-1]
@@ -27,7 +29,7 @@ def read(contains=None):
 
     if contains:
         return {
-            k: v for k, v in files
+            k: v for k, v in files.items()
             if contains in k
         }
     return files
