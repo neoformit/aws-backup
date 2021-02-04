@@ -27,5 +27,10 @@ echo "Moving backup file to AWS..."
 aws s3 mv $fname s3://neoform-backup/postgresql/$fname
 echo "Done"
 
+echo ""
+echo "========================================================================="
+echo "Cascading backups..."
+echo ""
+
 # Cascade backups to daily, weekly and monthly
 ./backup.py
