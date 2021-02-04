@@ -1,13 +1,15 @@
 """Send email to admin."""
 
-import dotenv
+import os
 import smtplib
+from dotenv import load_dotenv
 
+load_dotenv()
 port = 25
-password =
-smtp_server =
-sender_email =
-recipient_email =
+smtp_server = os.environ['EMAIL_HOSTNAME']
+sender_email = os.environ['EMAIL_USERNAME']
+password = os.environ['EMAIL_PASSWORD']
+recipient_email = os.environ['EMAIL_RECIPIENT']
 
 
 def send_mail(message):
