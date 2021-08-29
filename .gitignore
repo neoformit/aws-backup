@@ -1,6 +1,7 @@
 # Project specific
 *.sql.gz
 *.sql
+config.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
