@@ -35,6 +35,18 @@ def read(contains=None):
     return files
 
 
+def move(source, dest):
+    """Copy file in S3 storage."""
+    args = [
+        'aws',
+        's3',
+        'mv',
+        source,
+        dest,
+    ]
+    subprocess.run(args, check=True)
+
+
 def copy(source, dest):
     """Copy file in S3 storage."""
     args = [
