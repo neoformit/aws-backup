@@ -4,16 +4,16 @@ import os
 import subprocess
 from datetime import datetime
 
-S3_PATH = 's3://neoform-backup/files/'
+from config import config
 
 
 def read_files():
     """Read files listed under given S3 bucket path and return stdout."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'ls',
-        S3_PATH,
+        config.S3_PATH,
     ]
     result = subprocess.run(args, check=True, stdout=subprocess.PIPE)
     s3_files = result.stdout.decode('utf-8').split('\n')
@@ -28,27 +28,21 @@ def read_files():
     return files
 
 
-def store(filepaths):
-    """Send all tar archives in base_dir to S3 storage."""
+def store(filepaths, dest):
+    """Send all files in filepaths[] to S3 storage under dest dir."""
     for f in filepaths:
-        args = [
-            'aws',
-            's3',
-            'mv',
-            f,
-            os.path.join(S3_PATH, f),
-        ]
-        subprocess.run(args, check=True)
+        d = os.path.join(dest, os.basename(f))
+        move(f, d)
 
 
 def copy(src, dest):
-    """Move s3 file to new location."""
+    """Copy s3 file to new location."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'cp',
-        os.path.join(S3_PATH, src),
-        os.path.join(S3_PATH, dest)
+        os.path.join(config.S3_PATH, src),
+        os.path.join(config.S3_PATH, dest)
     ]
     subprocess.run(args, check=True)
 
@@ -56,21 +50,21 @@ def copy(src, dest):
 def move(src, dest):
     """Move s3 file to new location."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'mv',
-        os.path.join(S3_PATH, src),
-        os.path.join(S3_PATH, dest)
+        os.path.join(config.S3_PATH, src),
+        os.path.join(config.S3_PATH, dest)
     ]
     subprocess.run(args, check=True)
 
 
 def remove(path):
-    """Move s3 file to new location."""
+    """Remove s3 file."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'rm',
-        os.path.join(S3_PATH, path)
+        os.path.join(config.S3_PATH, path)
     ]
     subprocess.run(args, check=True)

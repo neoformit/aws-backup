@@ -7,40 +7,50 @@ from datetime import date
 from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
 
+from config import config, logger
+from . import dispatch, s3
+
 
 class ProjectBackup:
     """Back up specified project files as tar archives.
 
-    All dirs under base_dir (first arg) are considered as project dirs.
+    All direct child dirs of base_dir (first arg) are considered as projects.
 
     Specify files to back up in each project dir by adding the file
-    "backup.paths" (.gitignore syntax) to a project's root dir.
+    `backup.paths` (.gitignore syntax) to a project's root dir. If
+    `backup.paths` does not exist, no file backups will be made.
 
-    Set intial=True to force back up of all project's backup.paths.
+    By default, a project backup will only run when files have been modified in
+    the last 25 hours. This prevents duplicate backups from being made for a
+    project when content is unchanged.
 
-    Add file flag backup.initial to project dir to force back up of specific
-    project's backup.paths.
+    Add file flag `backup.initial` to project dir to force back up of specific
+    project's `backup.paths` (i.e. new project created). Add `backup.initial`
+    to the project root dir to flag all projects as inital backups
+    (i.e. first ever run). Note that there is nothing 'dangerous' about running
+    initial, it just saves some time and disk space in the long-run on dormant
+    applications.
 
-    If no backup.paths file is present in project dir, nothing will be backed
-    up.
-
-    Add a backup.paths file with the line '*' to back up everything.
+    Add a `backup.paths` file with the line '*' to back up everything.
     """
 
-    def __init__(self, base_dir, initial=False):
+    def __init__(self, base_dir, log_file=None):
         """Create project backup and collect archive file names."""
-        self.today = date.today().strftime('%Y-%m-%d')
         self.BASE_DIR = base_dir
-        self.INITIAL = initial
-        if initial:
-            print("Initial backup: backing up all projects...")
+        self.INITIAL = self.is_initial_global_backup()
+        self.today = date.today().strftime('%Y-%m-%d')
+
         self.project_paths = [
             x for x in os.listdir(self.BASE_DIR)
             if os.path.isdir(os.path.join(self.BASE_DIR, x))
         ]
-        self.archives = self.make_tarballs()
+        if log_file:
+            with open(log_file) as f:
+                f.write('# File paths backed up to S3 in last run\n')
+                f.write(f'# {self.today}\n\n')
+                f.write('\n'.join(self.project_paths) + '\n')
 
-    def make_tarballs(self):
+    def build_archives(self):
         """Create tarballs for all dirs in base_dir.
 
         Only files listed under a project's backup.paths file will be included.
@@ -64,23 +74,32 @@ class ProjectBackup:
 
                 if not (self.INITIAL or self.is_initial_project_backup(dpath)):
                     if not self.files_modified(fpaths):
-                        print(
-                            f"\nProject {dpath}:",
-                            "no files modified. Skipping..."
-                        )
+                        logger.info(
+                            f"\nSkipping project {dpath}: no files modified")
                         continue
 
                 print("Making backup...")
-                tarname = self.compress_files(dpath, fpaths)
+                tarname = self.tar(dpath, fpaths)
                 archives.append(tarname)
                 print(f"Tarball created: {tarname}")
 
             except Exception as exc:
+                # (not yet configured)
                 # Email error message and continue
                 # But raise while in dev
+                # if config.DEBUG:
+                #     raise exc
                 raise exc
 
-        return archives
+        self.archives = archives
+
+    def dispatch_to_s3(self):
+        """Dispatch archives to S3 and clean up."""
+        s3.store(
+            self.archives,
+            config.S3_FILES_PATH,
+        )
+        dispatch.cascade()
 
     def get_backup_filepaths(self, dpath):
         """Return filtered list of file paths."""
@@ -106,6 +125,16 @@ class ProjectBackup:
             return True
         return False
 
+    def is_initial_global_backup(self):
+        """Return true if projects root flagged as inital backup."""
+        flag = os.path.join(self.BASE_DIR, 'backup.initial')
+        if os.path.exists(flag):
+            os.remove(flag)
+            logger.info(
+                "Project root flagged as initial - setting INITIAL=True")
+            return True
+        return False
+
     def files_modified(self, fpaths):
         """Return True if files have been modified in last 25 hrs."""
         one_day_ago = time() - 90000  # 25 hours ago
@@ -115,7 +144,7 @@ class ProjectBackup:
                 return True
         return False
 
-    def compress_files(self, dpath, fpaths):
+    def tar(self, dpath, fpaths):
         """Compress files into a tar.gz archive."""
         tarname = f'daily_{self.today}_{dpath}.tar.gz'
         try:

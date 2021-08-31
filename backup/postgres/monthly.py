@@ -7,55 +7,55 @@ from operator import itemgetter
 from datetime import datetime, timedelta
 
 from . import s3
-from config import WEEKLY_PREFIX, MONTHLY_PREFIX, MONTHS, S3_POSTGRES_PATH
+from config import config, logger
 
 
 def make():
     """Make monthly backup from weekly backup files and remove old files."""
-    files = s3.read(contains=MONTHLY_PREFIX)
-    print("Monthly backup files currently in S3 storage:")
+    files = s3.read(contains=config.MONTHLY_PREFIX)
+    logger.debug("Monthly backup files currently in S3 storage:")
     for k, v in files.items():
-        print(f'{k.ljust(30)} | {v.strftime("%Y-%m-%d %H:%M:%S")}')
-    if files:
-        print()
-    else:
-        print("None")
+        logger.debug(f'{k.ljust(30)} | {v.strftime("%Y-%m-%d %H:%M:%S")}')
+    if not files:
+        logger.debug("None")
 
     create_monthly_from_weekly()
 
-    n_months_ago = datetime.now() - timedelta(days=MONTHS)
+    n_months_ago = datetime.now() - timedelta(days=config.MONTHS)
     old_files = {
         k: v for k, v in files.items()
         if v < n_months_ago
     }
 
     if old_files:
-        print(
+        logger.debug(
             "Removing old files from S3 storage:\n"
             + ' '.join(old_files.keys())
             + '\n'
         )
         for fname, timestamp in old_files.items():
             s3.remove(fname)
-        print("Done")
+        logger.debug("Done")
     else:
-        print("No old files to remove")
+        logger.debug("No old files to remove")
 
 
 def create_monthly_from_weekly():
     """Copy lastest weekly backup to convert to monthly backup."""
-    weekly_files = s3.read(contains=WEEKLY_PREFIX)
+    weekly_files = s3.read(contains=config.WEEKLY_PREFIX)
     if not weekly_files:
-        print("Can't make monthly backup, no weekly backups yet.")
+        logger.debug("Can't make monthly backup, no weekly backups yet.")
         return
     files_by_date = sorted(
         list(weekly_files.items()),
         key=itemgetter(1),
     )
     oldest = files_by_date[0][0]
-    new_fname = oldest.replace(WEEKLY_PREFIX, MONTHLY_PREFIX)
-    print(f'Creating monthly backup file {new_fname} from weekly backup {oldest}')
+    new_fname = oldest.replace(config.WEEKLY_PREFIX, config.MONTHLY_PREFIX)
+    logger.debug(
+        f'Creating monthly backup file {new_fname}'
+        f' from weekly backup {oldest}')
     s3.copy(
-        os.path.join(S3_POSTGRES_PATH, oldest),
-        os.path.join(S3_POSTGRES_PATH, new_fname),
+        os.path.join(config.S3_POSTGRES_PATH, oldest),
+        os.path.join(config.S3_POSTGRES_PATH, new_fname),
     )

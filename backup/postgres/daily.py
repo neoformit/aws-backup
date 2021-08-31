@@ -5,31 +5,30 @@
 from datetime import datetime, timedelta
 
 from . import s3
-from config import DAILY_PREFIX, DAYS
+from config import config, logger
 
 
 def make():
     """Make the daily backup and clean up old backup files."""
-    files = s3.read(contains=DAILY_PREFIX)
-    print("Daily backup files currently in S3 storage:")
+    files = s3.read(contains=config.DAILY_PREFIX)
+    logger.debug("Daily backup files currently in S3 storage:")
     for k, v in files.items():
-        print(f'{k.ljust(30)} | {v.strftime("%Y-%m-%d %H:%M:%S")}')
-    print()
+        logger.debug(f'{k.ljust(30)} | {v.strftime("%Y-%m-%d %H:%M:%S")}')
 
-    n_days_ago = datetime.now() - timedelta(days=DAYS)
+    n_days_ago = datetime.now() - timedelta(days=config.DAYS)
     old_files = {
         k: v for k, v in files.items()
         if v < n_days_ago
     }
 
     if old_files:
-        print(
+        logger.debug(
             "Removing old files from S3 storage:\n"
             + ' '.join(old_files.keys())
             + '\n'
         )
         for fname, timestamp in old_files.items():
             s3.remove(fname)
-        print("Done")
+        logger.debug("Done")
     else:
-        print("No old files to remove")
+        logger.debug("No old files to remove")

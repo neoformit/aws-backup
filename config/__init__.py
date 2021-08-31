@@ -1,9 +1,11 @@
 """Read in configuration."""
 
+import os
 import yaml
 import logging
-from logging.config import dictConfig
-
+import logging.config
+import subprocess
+from types import SimpleNamespace
 
 # Read in YAML configuration
 # ------------------------------------------------------------------------------
@@ -12,19 +14,20 @@ if not os.path.exists('config.yml'):
         "Please create 'config.yml' from the sample template provided.")
 
 with open('config.yml') as f:
-    config = yaml.safe_load(f)
+    config = SimpleNamespace(**yaml.safe_load(f))
 
 
 # Check configuration
 # ------------------------------------------------------------------------------
 
 required_paths = (
-    config['USER_HOME'],
-    config['LOG_FILE_PATH'],
+    config.USER_HOME,
+    config.WORKING_DIR,
+    config.LOG_FILE_PATH or config.WORKING_DIR,
 )
 
 required_commands = (
-    config['AWS_CMD'],
+    config.AWS_CMD,
 )
 
 for p in required_paths:
@@ -32,41 +35,43 @@ for p in required_paths:
         raise FileNotFoundError(f"Config path could not be found: {p}")
 
 for c in required_commands:
-    result = subprocess.call(['which', c], check=True)
-    if not result.stdout:
+    with open('/dev/null', 'wb', 0) as null:
+        result = subprocess.run(['which', c], check=True, stdout=null)
+    if result.returncode != 0:
         raise RuntimeError(f"No such command: {c}")
 
 
 # Logging configuration
 # ------------------------------------------------------------------------------
 logger = logging.getLogger(__name__)
-dictConfig({
+logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': True,
     'formatters': {
         'standard': {
-            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            'format': '{levelname} | {asctime} | {module}: {message}',
+            'style': '{',
         },
     },
     'handlers': {
-        'console': {
-            'level': 'INFO',
-            'formatter': 'standard',
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',  # Default is stderr
-        },
         'file': {
-            'level': 'INFO',
+            'delay': True,
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 1000000,  # 1MB ~ 20k rows
+            'backupCount': 5,
+            'filename': config.LOG_FILE_PATH or 'backup.log',
             'formatter': 'standard',
-            'class': 'logging.FileHandler',
-            'filename': config['LOG_FILE_PATH'] or 'backup.log',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'standard',
         },
     },
-    'loggers': {
-        'root': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-    }
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['console', 'file'],
+    },
 })
+logging.root.setLevel(logging.DEBUG)

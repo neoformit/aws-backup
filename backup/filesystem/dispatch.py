@@ -1,25 +1,14 @@
 """Back up tar archives to AWS S3 and clean up old files."""
 
-import s3
 from datetime import date
 from operator import itemgetter
 
-DAILY_PREFIX = 'daily'
-WEEKLY_PREFIX = 'weekly'
-MONTHLY_PREFIX = 'monthly'
+from config import config
 
-# Number of records to retain:
-DAILY_RECORDS = 7
-WEEKLY_RECORDS = 3
-MONTHLY_RECORDS = 5
+from . import s3
 
 
-def to_s3_storage(archives):
-    """Send newly created archives to s3 storage."""
-    s3.store(archives)
-
-
-def cleanup():
+def cascade():
     """Run all cleanup operations to organise s3 backup archives."""
     today = date.today()
     if today.day == 1:
@@ -35,24 +24,25 @@ def monthly_cleanup():
 
     weekly = sorted([
         (f, m) for f, m in s3_files
-        if f.startswith(WEEKLY_PREFIX)
+        if f.startswith(config.WEEKLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
     monthly = sorted([
         (f, m) for f, m in s3_files
-        if f.startswith(MONTHLY_PREFIX)
+        if f.startswith(config.MONTHLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
     if weekly[0][1] > monthly[0][1]:
-        new_fpath = weekly[0][0].replace(WEEKLY_PREFIX, MONTHLY_PREFIX, 1)
+        new_fpath = weekly[0][0].replace(
+            config.WEEKLY_PREFIX, config.MONTHLY_PREFIX, 1)
         s3.copy(
             weekly[0][0],
             new_fpath
         )
         monthly.insert(new_fpath, 0)
 
-    if len(monthly) > MONTHLY_RECORDS:
-        oldest = monthly[MONTHLY_RECORDS:]
+    if len(monthly) > config.MONTHLY_RECORDS:
+        oldest = monthly[config.MONTHLY_RECORDS:]
         for f in oldest:
             s3.remove(f)
 
@@ -63,24 +53,25 @@ def weekly_cleanup():
 
     daily = sorted([
         (f, m) for f, m in s3_files
-        if f.startswith(DAILY_PREFIX)
+        if f.startswith(config.DAILY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
     weekly = sorted([
         (f, m) for f, m in s3_files
-        if f.startswith(WEEKLY_PREFIX)
+        if f.startswith(config.WEEKLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
     if daily[0][1] > weekly[0][1]:
-        new_fpath = daily[0][0].replace(DAILY_PREFIX, WEEKLY_PREFIX, 1)
+        new_fpath = daily[0][0].replace(
+            config.DAILY_PREFIX, config.WEEKLY_PREFIX, 1)
         s3.copy(
             daily[0][0],
             new_fpath
         )
         weekly.insert(new_fpath, 0)
 
-    if len(weekly) > WEEKLY_RECORDS:
-        oldest = weekly[WEEKLY_RECORDS:]
+    if len(weekly) > config.WEEKLY_RECORDS:
+        oldest = weekly[config.WEEKLY_RECORDS:]
         for f in oldest:
             s3.remove(f)
 
@@ -94,7 +85,7 @@ def daily_cleanup():
         if f.startswith(DAILY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
-    if len(daily) > DAILY_RECORDS:
-        oldest = daily[DAILY_RECORDS:]
+    if len(daily) > config.DAILY_RECORDS:
+        oldest = daily[config.DAILY_RECORDS:]
         for f in oldest:
             s3.remove(f)

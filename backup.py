@@ -14,14 +14,26 @@ Not yet configured:
 - Filesystem dumps with above as tarballs
 - Filesystem dumps target specific paths in gitignore syntax as defined by
   `backup.paths` records in projects' root under configured PROJECT_BASE_DIR
+- Add file flag backup.initial to project dir to force back up of that
+  project's backup.paths regardless of timestamp.
 """
 
 import os
+import time
+import logging
 
-from config import config
 from backup import cascade
 from backup.postgres import pgdump
+from backup.filesystem import archive
+from config import config, logger
 
-os.chdir(config['WORKING_DIR'])
-pgdump.to_s3()
-cascade.make()
+
+logger = logging.getLogger(__name__)
+
+time.sleep(1)
+logger.info("Loaded modules")
+
+# os.chdir(config.WORKING_DIR)
+# pgdump.to_s3()
+# cascade.make()
+# archive.files()

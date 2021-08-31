@@ -1,11 +1,10 @@
 """Make postgres database dump."""
 
-import config
 import datetime
 import subprocess
 
 from . import s3
-from backup import config, logger
+from config import config, logger
 
 
 def to_s3():
@@ -19,6 +18,6 @@ def to_s3():
         '>', fname,
     ]
     subprocess.run(args, check=True)
-    dest = os.path.join(config['S3_POSTGRES_PATH'], fname)
+    dest = os.path.join(config.S3_POSTGRES_PATH, fname)
     logger.info(f"Sending {fname} to {dest}...")
     s3.move(fname, dest)

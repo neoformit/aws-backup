@@ -7,45 +7,45 @@ from operator import itemgetter
 from datetime import datetime, timedelta
 
 from . import s3
-from config import WEEKS, DAILY_PREFIX, WEEKLY_PREFIX, S3_POSTGRES_PATH
+from config import config, logger
 
 
 def make():
     """Make weekly backup from daily backup file and remove old files."""
     create_weekly_from_daily()
-    files = s3.read(contains=WEEKLY_PREFIX)
-    n_weeks_ago = datetime.now() - timedelta(weeks=WEEKS)
+    files = s3.read(contains=config.WEEKLY_PREFIX)
+    n_weeks_ago = datetime.now() - timedelta(weeks=config.WEEKS)
     old_files = {
         k: v for k, v in files.items()
         if v < n_weeks_ago
     }
     if old_files:
-        print(
+        logger.debug(
             "Removing old files from S3 storage:\n"
             + ' '.join(old_files.keys())
             + "\n"
         )
         for fname in old_files:
             s3.remove(fname)
-        print("Done")
+        logger.debug("Done")
     else:
-        print("No old files to remove")
+        logger.debug("No old files to remove")
 
 
 def create_weekly_from_daily():
     """Copy lastest daily backup to convert to weekly backup."""
-    daily_files = s3.read(contains=DAILY_PREFIX)
+    daily_files = s3.read(contains=config.DAILY_PREFIX)
     if not daily_files:
-        print("Can't make weekly backup, no daily backups yet.")
+        logger.debug("Can't make weekly backup, no daily backups yet.")
         return
     files_by_date = sorted(
         list(daily_files.items()),
         key=itemgetter(1),
     )
     oldest = files_by_date[0][0]
-    new_fname = oldest.replace(DAILY_PREFIX, WEEKLY_PREFIX)
-    print(f"Creating weekly backup file {new_fname} from daily file {oldest}")
+    new_fname = oldest.replace(config.DAILY_PREFIX, config.WEEKLY_PREFIX)
+    logger.debug(f"Creating weekly backup file {new_fname} from daily file {oldest}")
     s3.copy(
-        os.path.join(S3_POSTGRES_PATH, oldest),
-        os.path.join(S3_POSTGRES_PATH, new_fname),
+        os.path.join(config.S3_POSTGRES_PATH, oldest),
+        os.path.join(config.S3_POSTGRES_PATH, new_fname),
     )

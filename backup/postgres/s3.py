@@ -4,16 +4,16 @@ import os
 import subprocess
 from datetime import datetime
 
-from config import S3_POSTGRES_PATH
+from config import config, logger
 
 
 def read(contains=None):
     """Read files listed under S3 bucket path and return stdout."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'ls',
-        S3_POSTGRES_PATH,
+        config.S3_POSTGRES_PATH,
     ]
     files = {}
     result = subprocess.run(args, stdout=subprocess.PIPE, check=True)
@@ -38,7 +38,7 @@ def read(contains=None):
 def move(source, dest):
     """Copy file in S3 storage."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'mv',
         source,
@@ -50,7 +50,7 @@ def move(source, dest):
 def copy(source, dest):
     """Copy file in S3 storage."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'cp',
         source,
@@ -62,9 +62,9 @@ def copy(source, dest):
 def remove(path):
     """Remove specified filename from S3 storage under S3_POSTGRES_PATH."""
     args = [
-        'aws',
+        config.AWS_CMD,
         's3',
         'rm',
-        os.path.join(S3_POSTGRES_PATH, path),
+        os.path.join(config.S3_POSTGRES_PATH, path),
     ]
     subprocess.run(args, check=True)
