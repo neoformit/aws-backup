@@ -6,7 +6,7 @@ DRY_RUN: False
 AWS_CMD: 'aws'
 DB_DUMP_CMD: 'pg_dumpall'
 WORKING_DIR: '/home/user/backups' # Defaults to pwd
-LOG_FILE_PATH: ''                 # Defaults to wdir
+LOG_FILE_DIR: ''                 # Defaults to wdir
 
 # Mail settings
 EMAIL_HOSTNAME: ''  # Will default to

@@ -23,13 +23,20 @@ with open('config.yml') as f:
 # Check configuration
 # ------------------------------------------------------------------------------
 
+if not config.WORKING_DIR:
+    config.WORKING_DIR = os.getcwd()
+
+if not config.LOG_FILE_DIR:
+    config.LOG_FILE_DIR = config.WORKING_DIR
+
 required_paths = (
     config.WORKING_DIR,
-    config.LOG_FILE_PATH or config.WORKING_DIR,
+    config.LOG_FILE_DIR,
 )
 
 required_commands = (
     config.AWS_CMD,
+    config.DB_DUMP_CMD,
 )
 
 for p in required_paths:
@@ -61,7 +68,7 @@ logging.config.dictConfig({
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 1000000,  # 1MB ~ 20k rows
             'backupCount': 5,
-            'filename': config.LOG_FILE_PATH or 'backup.log',
+            'filename': os.path.join(config.LOG_FILE_DIR, 'aws-backup.log'),
             'formatter': 'standard',
         },
         'console': {
