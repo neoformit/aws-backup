@@ -7,6 +7,9 @@ import logging.config
 import subprocess
 from types import SimpleNamespace
 
+logger = logging.getLogger(__name__)
+
+
 # Read in YAML configuration
 # ------------------------------------------------------------------------------
 if not os.path.exists('config.yml'):
@@ -21,7 +24,6 @@ with open('config.yml') as f:
 # ------------------------------------------------------------------------------
 
 required_paths = (
-    config.USER_HOME,
     config.WORKING_DIR,
     config.LOG_FILE_PATH or config.WORKING_DIR,
 )
@@ -43,7 +45,6 @@ for c in required_commands:
 
 # Logging configuration
 # ------------------------------------------------------------------------------
-logger = logging.getLogger(__name__)
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': True,

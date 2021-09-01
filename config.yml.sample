@@ -1,9 +1,23 @@
-# Backup configuration
+# Sample backup configuration
 ---
 
 # Environment
-USER_HOME: '/home/username'
-AWS_CMD: '/path/to/aws/command'
+DRY_RUN: False
+AWS_CMD: 'aws'
+DB_DUMP_CMD: 'pg_dumpall'
+WORKING_DIR: '/home/user/backups' # Defaults to pwd
+LOG_FILE_PATH: ''                 # Defaults to wdir
+
+# Mail settings
+EMAIL_HOSTNAME: ''  # Will default to
+EMAIL_PASSWORD: ''  # console mail handler if
+EMAIL_USERNAME: ''  # any of these fields are empty
+EMAIL_RECIPIENT: ''
+
+# FS backups will be indexed recursively from this dir
+FILESYSTEM_PROJECT_ROOT: '/home/user/projects'
+# FS backup paths will be written here
+FILESYSTEM_BACKUP_PATHS_LOG: 'backup.paths.log'
 
 # AWS S3 path for backup location
 S3_FILES_PATH: 's3://bucket-name/filesystem/'

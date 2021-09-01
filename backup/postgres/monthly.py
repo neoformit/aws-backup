@@ -3,11 +3,14 @@
 """Remove files from S3 storage older than N months."""
 
 import os
+import logging
 from operator import itemgetter
 from datetime import datetime, timedelta
 
 from . import s3
-from config import config, logger
+from config import config
+
+logger = logging.getLogger(__name__)
 
 
 def make():

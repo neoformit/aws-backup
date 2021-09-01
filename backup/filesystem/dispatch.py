@@ -1,5 +1,6 @@
 """Back up tar archives to AWS S3 and clean up old files."""
 
+import logging
 from datetime import date
 from operator import itemgetter
 
@@ -7,13 +8,17 @@ from config import config
 
 from . import s3
 
+logger = logging.getLogger(__name__)
+
 
 def cascade():
     """Run all cleanup operations to organise s3 backup archives."""
     today = date.today()
-    if today.day == 1:
+    if today.day == config.MONTHLY_BACKUP_DAY:
+        logger.info(f"Month day {today.day}: PERFORMING MONTHLY CASCADE")
         monthly_cleanup()
-    if today.weekday() == 0:
+    if today.weekday() == config.WEEKLY_BACKUP_WEEKDAY:
+        logger.info(f"Week day {today.weekday()}: PERFORMING WEEKLY CASCADE")
         weekly_cleanup()
     daily_cleanup()
 
@@ -23,12 +28,12 @@ def monthly_cleanup():
     s3_files = s3.read_files()
 
     weekly = sorted([
-        (f, m) for f, m in s3_files
+        (f, m) for f, m in s3_files.items()
         if f.startswith(config.WEEKLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
     monthly = sorted([
-        (f, m) for f, m in s3_files
+        (f, m) for f, m in s3_files.items()
         if f.startswith(config.MONTHLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
@@ -36,10 +41,16 @@ def monthly_cleanup():
         new_fpath = weekly[0][0].replace(
             config.WEEKLY_PREFIX, config.MONTHLY_PREFIX, 1)
         s3.copy(
-            weekly[0][0],
+            weekly[0],
             new_fpath
         )
-        monthly.insert(new_fpath, 0)
+        monthly.insert((new_fpath, date.today()), 0)
+
+    string_monthly_records = '\n'.join([
+        f"{f} | {m.isoformat()}"
+        for f, m in monthly
+    ])
+    logger.debug(f"Current monthly records:\n{string_monthly_records}")
 
     if len(monthly) > config.MONTHLY_RECORDS:
         oldest = monthly[config.MONTHLY_RECORDS:]
@@ -52,12 +63,12 @@ def weekly_cleanup():
     s3_files = s3.read_files()
 
     daily = sorted([
-        (f, m) for f, m in s3_files
+        (f, m) for f, m in s3_files.items()
         if f.startswith(config.DAILY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
     weekly = sorted([
-        (f, m) for f, m in s3_files
+        (f, m) for f, m in s3_files.items()
         if f.startswith(config.WEEKLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
@@ -70,6 +81,12 @@ def weekly_cleanup():
         )
         weekly.insert(new_fpath, 0)
 
+    string_weekly_records = '\n'.join([
+        f"{f} | {m.isoformat()}"
+        for f, m in weekly
+    ])
+    logger.debug(f"Current weekly records:\n{string_weekly_records}")
+
     if len(weekly) > config.WEEKLY_RECORDS:
         oldest = weekly[config.WEEKLY_RECORDS:]
         for f in oldest:
@@ -81,9 +98,15 @@ def daily_cleanup():
     s3_files = s3.read_files()
 
     daily = sorted([
-        (f, m) for f, m in s3_files
-        if f.startswith(DAILY_PREFIX)
+        (f, m) for f, m in s3_files.items()
+        if f.startswith(config.DAILY_PREFIX)
     ], key=itemgetter(1), reverse=True)
+
+    string_daily_records = '\n'.join([
+        f"{f} | {m.isoformat()}"
+        for f, m in daily
+    ])
+    logger.debug(f"Current daily records:\n{string_daily_records}")
 
     if len(daily) > config.DAILY_RECORDS:
         oldest = daily[config.DAILY_RECORDS:]

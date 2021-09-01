@@ -1,14 +1,20 @@
 """Functions for interacting with AWS S3 storage."""
 
 import os
+import logging
 import subprocess
 from datetime import datetime
 
-from config import config, logger
+from config import config
+
+logger = logging.getLogger(__name__)
 
 
 def read(contains=None):
-    """Read files listed under S3 bucket path and return stdout."""
+    """Read files listed under S3 bucket path.
+
+    Return a dict of {filename<string>: timestamp<datetime.datetime>}
+    """
     args = [
         config.AWS_CMD,
         's3',
@@ -32,6 +38,11 @@ def read(contains=None):
             k: v for k, v in files.items()
             if contains in k
         }
+    string_files = '\n'.join([
+        f"{f} | {m.isoformat()}"
+        for f, m in files.items()
+    ])
+    logger.debug(f"List filesystem archives in S3:\n{string_files}")
     return files
 
 
@@ -44,6 +55,9 @@ def move(source, dest):
         source,
         dest,
     ]
+    logger.debug(f"RUN: {' '.join(args)}")
+    if config.DRY_RUN:
+        return
     subprocess.run(args, check=True)
 
 
@@ -56,6 +70,9 @@ def copy(source, dest):
         source,
         dest,
     ]
+    logger.debug(f"RUN: {' '.join(args)}")
+    if config.DRY_RUN:
+        return
     subprocess.run(args, check=True)
 
 
@@ -67,4 +84,7 @@ def remove(path):
         'rm',
         os.path.join(config.S3_POSTGRES_PATH, path),
     ]
+    logger.debug(f"RUN: {' '.join(args)}")
+    if config.DRY_RUN:
+        return
     subprocess.run(args, check=True)

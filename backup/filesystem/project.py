@@ -2,13 +2,16 @@
 
 import os
 import tarfile
+import logging
 from time import time
 from datetime import date
 from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
 
-from config import config, logger
+from config import config
 from . import dispatch, s3
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectBackup:
@@ -63,14 +66,14 @@ class ProjectBackup:
             try:
                 fpaths = self.get_backup_filepaths(dpath)
                 if fpaths is None:
-                    print(
+                    logger.debug(
                         f"\nProject {dpath}:",
                         "no backup.paths file. Skipping..."
                     )
                     continue
 
-                print(f"\nProject: {dpath}")
-                print("-" * 80)
+                logger.debug(f"\nProject: {dpath}")
+                logger.debug("-" * 80)
 
                 if not (self.INITIAL or self.is_initial_project_backup(dpath)):
                     if not self.files_modified(fpaths):
@@ -78,10 +81,10 @@ class ProjectBackup:
                             f"\nSkipping project {dpath}: no files modified")
                         continue
 
-                print("Making backup...")
+                logger.debug("Making backup...")
                 tarname = self.tar(dpath, fpaths)
                 archives.append(tarname)
-                print(f"Tarball created: {tarname}")
+                logger.debug(f"Tarball created: {tarname}")
 
             except Exception as exc:
                 # (not yet configured)
@@ -121,7 +124,7 @@ class ProjectBackup:
         flag = os.path.join(self.BASE_DIR, dpath, 'backup.initial')
         if os.path.exists(flag):
             os.remove(flag)
-            print(f"Project {dpath} flagged as initial")
+            logger.debug(f"Project {dpath} flagged as initial")
             return True
         return False
 
@@ -140,7 +143,7 @@ class ProjectBackup:
         one_day_ago = time() - 90000  # 25 hours ago
         for f in fpaths:
             if os.path.getmtime(os.path.join(self.BASE_DIR, f)) > one_day_ago:
-                print(f"File modified in past 25hrs: {f}")
+                logger.debug(f"File modified in past 25hrs: {f}")
                 return True
         return False
 
@@ -151,7 +154,7 @@ class ProjectBackup:
             with tarfile.open(tarname, 'w:gz') as tar:
                 for f in fpaths:
                     fpath = os.path.join(self.BASE_DIR, f)
-                    print(f"Adding {fpath} to archive...")
+                    logger.debug(f"Adding {fpath} to archive...")
                     tar.add(fpath)
         except Exception as exc:
             os.remove(tarname)

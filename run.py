@@ -19,21 +19,39 @@ Not yet configured:
 """
 
 import os
-import time
 import logging
+from argparse import ArgumentParser
 
-from backup import cascade
-from backup.postgres import pgdump
-from backup.filesystem import archive
-from config import config, logger
-
+import backup
+from config import config
 
 logger = logging.getLogger(__name__)
 
-time.sleep(1)
-logger.info("Loaded modules")
 
-# os.chdir(config.WORKING_DIR)
-# pgdump.to_s3()
-# cascade.make()
-# archive.files()
+def main():
+    """Run backups."""
+    set_args()
+    logger.info("Loaded modules")
+    os.chdir(config.WORKING_DIR)
+    backup.make()
+
+
+def set_args():
+    """Parse command line arguments."""
+    ap = ArgumentParser(description='Process some integers.')
+    ap.add_argument(
+        '--dry-run',
+        dest='dry_run',
+        action='store_true',
+        default=False,
+        help="Show intentions but don't do anything",
+    )
+    args = ap.parse_args()
+
+    if args.dry_run:
+        config.DRY_RUN = True
+
+
+if __name__ == '__main__':
+    print("Loaded modules")
+    main()

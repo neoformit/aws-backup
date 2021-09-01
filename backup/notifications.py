@@ -1,7 +1,11 @@
 """Send email to admin."""
 
+import os
 import smtplib
-from config import config, logger
+import logging
+from config import config
+
+logger = logging.getLogger(__name__)
 
 PORT = 25
 HOST = config.EMAIL_HOSTNAME
@@ -18,7 +22,11 @@ def send_mail(message):
         f"Subject: Neoform PG backup error\n\n{message}"
     )
 
-    if not (HOST and PASSWORD and SENDER_EMAIL and RECIPIENT_EMAIL):
+    if not (
+            HOST
+            and PASSWORD
+            and SENDER_EMAIL
+            and RECIPIENT_EMAIL) or os.environ.get('DRY_RUN'):
         logger.info("Dummy email\n" + 80 * "-" + '\n' + msg)
         return
 
