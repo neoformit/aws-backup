@@ -40,6 +40,7 @@ class ProjectBackup:
 
     def __init__(self, base_dir, log_file=None):
         """Create project backup and collect archive file names."""
+        self.log_file = log_file
         self.BASE_DIR = base_dir
         self.INITIAL = self.is_initial_global_backup()
         self.today = date.today().strftime('%Y-%m-%d')
@@ -48,10 +49,10 @@ class ProjectBackup:
             x for x in os.listdir(self.BASE_DIR)
             if os.path.isdir(os.path.join(self.BASE_DIR, x))
         ]
-        if log_file:
-            with open(log_file, 'w') as f:
-                f.write('# Projects backed up to S3 in last run\n')
-                f.write(f'# {self.today}\n\n')
+        if self.log_file:
+            with open(self.log_file, 'w') as f:
+                f.write(f'# Written {self.today}\n\n')
+                f.write('# Projects backed up to S3 in this run:\n')
                 f.write('\n'.join(self.project_paths) + '\n')
 
     def build_archives(self):
@@ -73,8 +74,16 @@ class ProjectBackup:
                     )
                     continue
 
-                logger.debug(f"\nProject: {dpath}")
+                if self.log_file:
+                    with open(self.log_file, 'a') as f:
+                        f.write(
+                            f"\n# Archived files for project '{dpath}':\n"
+                            + '\n'.join(sorted(fpaths))
+                            + '\n'
+                        )
+
                 logger.debug("-" * 80)
+                logger.debug(f"Project: {dpath}")
 
                 if not (self.INITIAL or self.is_initial_project_backup(dpath)):
                     if not self.files_modified(fpaths):
@@ -131,6 +140,9 @@ class ProjectBackup:
 
     def is_initial_global_backup(self):
         """Return true if projects root flagged as inital backup."""
+        if config.INITIAL:
+            logger.info("Flagged as initial backup - archiving all projects")
+            return True
         flag = os.path.join(self.BASE_DIR, 'backup.initial')
         if os.path.exists(flag):
             os.remove(flag)
@@ -155,7 +167,7 @@ class ProjectBackup:
             with tarfile.open(tarname, 'w:gz') as tar:
                 for f in fpaths:
                     fpath = os.path.join(self.BASE_DIR, f)
-                    logger.debug(f"Adding {fpath} to archive...")
+                    logger.debug(f"Adding <PROJECT_ROOT>/{f} to archive...")
                     tar.add(fpath)
         except Exception as exc:
             os.remove(tarname)

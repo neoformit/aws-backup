@@ -21,11 +21,23 @@ def read_files(contains=None):
         'ls',
         config.S3_FILES_PATH,
     ]
-    result = subprocess.run(args, check=True, stdout=subprocess.PIPE)
-    s3_files = result.stdout.decode('utf-8').split('\n')
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    result = subprocess.run(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode > 1:
+        raise RuntimeError(result.stderr)
+    file_lines = [
+        x
+        for x in result.stdout.decode('utf-8').split('\n')
+        if x.strip()
+    ]
+    logger.debug("S3 FILES:\n\t%s" % '\n\t'.join(file_lines))
 
     files = {}
-    for line in s3_files:
+    for line in file_lines:
         cols = [x for x in line.split(' ') if x]
         timestamp = datetime.strptime(' '.join(cols[:2]), '%Y-%m-%d %H:%M:%S')
         filename = cols[-1]
@@ -35,22 +47,21 @@ def read_files(contains=None):
         files = {
             k: v
             for k, v in files.items()
-            if k.contains(contains)
+            if contains in k
         }
 
-    string_files = '\n'.join([
-        f"{f} | {m.isoformat()}"
-        for f, m in files.items()
-    ])
-    logger.debug(f"List filesystem archives in S3:\n{string_files}")
     return files
 
 
 def store(filepaths, dest):
     """Send all files in filepaths[] to S3 storage under dest dir."""
+    if not filepaths:
+        logger.debug("No FS archives to dispatch to S3")
+        return
+
     logger.debug(f"Dispatching {len(filepaths)} files to S3...")
     for f in filepaths:
-        d = os.path.join(dest, os.basename(f))
+        d = os.path.join(dest, os.path.basename(f))
         move(f, d)
 
 
@@ -63,25 +74,25 @@ def copy(src, dest):
         os.path.join(config.S3_FILES_PATH, src),
         os.path.join(config.S3_FILES_PATH, dest)
     ]
-    logger.debug(f"RUN: {' '.join(args)}")
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     if config.DRY_RUN:
         return
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
 
 
 def move(src, dest):
-    """Move s3 file to new location."""
+    """Move files between local and S3."""
     args = [
         config.AWS_CMD,
         's3',
         'mv',
-        os.path.join(config.S3_FILES_PATH, src),
-        os.path.join(config.S3_FILES_PATH, dest)
+        src,
+        dest,
     ]
-    logger.debug(f"RUN: {' '.join(args)}")
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     if config.DRY_RUN:
         return
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
 
 
 def remove(path):
@@ -92,7 +103,7 @@ def remove(path):
         'rm',
         os.path.join(config.S3_FILES_PATH, path)
     ]
-    logger.debug(f"RUN: {' '.join(args)}")
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     if config.DRY_RUN:
         return
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL)

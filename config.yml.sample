@@ -1,12 +1,16 @@
 # Sample backup configuration
 ---
 
-# Environment
+# These three can be overridden with CLI flags:
+DEBUG: False        # Verbose log output
 DRY_RUN: False
+INITIAL: False
+
+# Environment
 AWS_CMD: 'aws'
 DB_DUMP_CMD: 'pg_dumpall'
 WORKING_DIR: '/home/user/backups' # Defaults to pwd
-LOG_FILE_DIR: ''                 # Defaults to wdir
+LOG_FILE_DIR: ''                  # Defaults to wdir
 
 # Mail settings
 EMAIL_HOSTNAME: ''  # Will default to

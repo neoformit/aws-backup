@@ -21,9 +21,21 @@ def read(contains=None):
         'ls',
         config.S3_POSTGRES_PATH,
     ]
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     files = {}
-    result = subprocess.run(args, stdout=subprocess.PIPE, check=True)
-    file_lines = result.stdout.decode('utf-8').split('\n')
+    result = subprocess.run(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode > 1:
+        raise RuntimeError(result.stderr)
+    file_lines = [
+        x
+        for x in result.stdout.decode('utf-8').split('\n')
+        if x.strip()
+    ]
+    logger.debug("S3 FILES:\n\t%s" % '\n\t'.join(file_lines))
 
     for line in file_lines:
         if not line:
@@ -38,11 +50,7 @@ def read(contains=None):
             k: v for k, v in files.items()
             if contains in k
         }
-    string_files = '\n'.join([
-        f"{f} | {m.isoformat()}"
-        for f, m in files.items()
-    ])
-    logger.debug(f"List filesystem archives in S3:\n{string_files}")
+
     return files
 
 
@@ -55,10 +63,10 @@ def move(source, dest):
         source,
         dest,
     ]
-    logger.debug(f"RUN: {' '.join(args)}")
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     if config.DRY_RUN:
         return
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
 
 
 def copy(source, dest):
@@ -70,10 +78,10 @@ def copy(source, dest):
         source,
         dest,
     ]
-    logger.debug(f"RUN: {' '.join(args)}")
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     if config.DRY_RUN:
         return
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
 
 
 def remove(path):
@@ -84,7 +92,7 @@ def remove(path):
         'rm',
         os.path.join(config.S3_POSTGRES_PATH, path),
     ]
-    logger.debug(f"RUN: {' '.join(args)}")
+    logger.debug(f"RUN:\n\t${' '.join(args)}")
     if config.DRY_RUN:
         return
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, stdout=subprocess.DEVNULL)

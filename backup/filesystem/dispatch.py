@@ -25,11 +25,22 @@ def cascade_project(project):
     """Run all cleanup operations to organise s3 backup archives."""
     today = date.today()
     if today.day == config.MONTHLY_BACKUP_DAY:
-        logger.info(f"Month day {today.day}: PERFORMING MONTHLY CASCADE")
+        logger.info(80 * "-")
+        logger.info(
+            f"Month day {today.day}: PERFORMING MONTHLY CASCADE"
+            f" - {project}")
+        logger.info(80 * "-")
         monthly_cleanup(project)
     if today.weekday() == config.WEEKLY_BACKUP_WEEKDAY:
-        logger.info(f"Week day {today.weekday()}: PERFORMING WEEKLY CASCADE")
+        logger.info(80 * "-")
+        logger.info(
+            f"Week day {today.weekday()}: PERFORMING WEEKLY CASCADE"
+            f" - {project}")
+        logger.info(80 * "-")
         weekly_cleanup(project)
+    logger.info(80 * "-")
+    logger.info(f"PERFORMING DAILY BACKUP - {project}")
+    logger.info(80 * "-")
     daily_cleanup(project)
 
 
@@ -42,29 +53,33 @@ def monthly_cleanup(project):
         if f.startswith(config.WEEKLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
+    if not weekly:
+        logger.debug("No weekly archives available to create monthly backup")
+        return
+
     monthly = sorted([
         (f, m) for f, m in s3_files.items()
         if f.startswith(config.MONTHLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
-    if weekly[0][1] > monthly[0][1]:
+    if not monthly or weekly[0][1] > monthly[0][1]:
         new_fpath = weekly[0][0].replace(
             config.WEEKLY_PREFIX, config.MONTHLY_PREFIX, 1)
         s3.copy(
-            weekly[0],
+            weekly[0][0],
             new_fpath
         )
-        monthly.insert((new_fpath, date.today()), 0)
+        monthly.insert(0, (new_fpath, date.today()))
 
-    string_monthly_records = '\n'.join([
+    string_monthly_records = '\n\t'.join([
         f"{f} | {m.isoformat()}"
         for f, m in monthly
     ])
-    logger.debug(f"Current monthly records:\n{string_monthly_records}")
+    logger.debug(f"Current monthly archives:\n\t{string_monthly_records}")
 
-    if len(monthly) > config.MONTHLY_RECORDS:
-        oldest = monthly[config.MONTHLY_RECORDS:]
-        for f in oldest:
+    if len(monthly) > config.MONTHS:
+        oldest = monthly[config.MONTHS:]
+        for f, m in oldest:
             s3.remove(f)
 
 
@@ -77,29 +92,33 @@ def weekly_cleanup(project):
         if f.startswith(config.DAILY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
+    if not daily:
+        logger.debug("No daily archives available to create monthly backup")
+        return
+
     weekly = sorted([
         (f, m) for f, m in s3_files.items()
         if f.startswith(config.WEEKLY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
-    if daily[0][1] > weekly[0][1]:
+    if not weekly or daily[0][1] > weekly[0][1]:
         new_fpath = daily[0][0].replace(
             config.DAILY_PREFIX, config.WEEKLY_PREFIX, 1)
         s3.copy(
             daily[0][0],
             new_fpath
         )
-        weekly.insert(new_fpath, 0)
+        weekly.insert(0, (new_fpath, date.today()))
 
-    string_weekly_records = '\n'.join([
+    string_weekly_records = '\n\t'.join([
         f"{f} | {m.isoformat()}"
         for f, m in weekly
     ])
-    logger.debug(f"Current weekly records:\n{string_weekly_records}")
+    logger.debug(f"Current weekly archives:\n\t{string_weekly_records}")
 
-    if len(weekly) > config.WEEKLY_RECORDS:
-        oldest = weekly[config.WEEKLY_RECORDS:]
-        for f in oldest:
+    if len(weekly) > config.WEEKS:
+        oldest = weekly[config.WEEKS:]
+        for f, m in oldest:
             s3.remove(f)
 
 
@@ -112,13 +131,13 @@ def daily_cleanup(project):
         if f.startswith(config.DAILY_PREFIX)
     ], key=itemgetter(1), reverse=True)
 
-    string_daily_records = '\n'.join([
+    string_daily_records = '\n\t'.join([
         f"{f} | {m.isoformat()}"
         for f, m in daily
     ])
-    logger.debug(f"Current daily records:\n{string_daily_records}")
+    logger.debug(f"Current daily archives:\n\t{string_daily_records}")
 
-    if len(daily) > config.DAILY_RECORDS:
-        oldest = daily[config.DAILY_RECORDS:]
+    if len(daily) > config.DAYS:
+        oldest = daily[config.DAYS:]
         for f in oldest:
             s3.remove(f)

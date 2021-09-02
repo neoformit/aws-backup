@@ -3,6 +3,7 @@
 import os
 import smtplib
 import logging
+import traceback
 from config import config
 
 logger = logging.getLogger(__name__)
@@ -14,13 +15,16 @@ SENDER_EMAIL = config.EMAIL_USERNAME
 RECIPIENT_EMAIL = config.EMAIL_RECIPIENT
 
 
-def send_mail(message):
+def send_mail(message, error=False):
     """Dispatch mail with given content and recipient(s)."""
     msg = (
         f"From: {SENDER_EMAIL}\n"
         f"To: {RECIPIENT_EMAIL}\n"
         f"Subject: Neoform PG backup error\n\n{message}"
     )
+
+    if error:
+        msg += f"\n\n{traceback.format_exc()}"
 
     if not (
             HOST

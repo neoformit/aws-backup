@@ -21,26 +21,38 @@ def pgdump():
     today = date.today()
 
     try:
-        if today.day == config['MONTHLY_BACKUP_DAY']:
-            logger.debug('Cascading monthly backups...\n')
+        if today.day == config.MONTHLY_BACKUP_DAY:
+            logger.info(80 * '-')
+            logger.info(f"Month day {today.day}: PERFORMING MONTHLY CASCADE")
+            logger.info(80 * '-')
             postgres.monthly.make()
 
-        if today.weekday() == config['WEEKLY_BACKUP_WEEKDAY']:
-            logger.debug('Cascading weekly backups...\n')
+        if today.weekday() == config.WEEKLY_BACKUP_WEEKDAY:
+            logger.info(80 * '-')
+            logger.info(
+                f"Week day {today.weekday()}: PERFORMING WEEKLY CASCADE")
+            logger.info(80 * '-')
             postgres.weekly.make()
 
-        logger.debug('Cascading daily backups...\n')
+        logger.info(80 * '-')
+        logger.info('CASCADING DAILY BACKUPS')
+        logger.info(80 * '-')
         postgres.daily.make()
 
     except Exception as exc:
-        send_mail(f'The following error was encountered:\n\n{exc}')
+        send_mail('Error encountered making DB cascade:', error=True)
+        raise exc
 
 
 def files():
     """Backup filesystem to S3."""
-    pb = ProjectBackup(
-        config.FILESYSTEM_PROJECT_ROOT,
-        log_file=config.FILESYSTEM_BACKUP_PATHS_LOG,
-    )
-    pb.build_archives()
-    pb.dispatch_to_s3()
+    try:
+        pb = ProjectBackup(
+            config.FILESYSTEM_PROJECT_ROOT,
+            log_file=config.FILESYSTEM_BACKUP_PATHS_LOG,
+        )
+        pb.build_archives()
+        pb.dispatch_to_s3()
+    except Exception as exc:
+        send_mail('Error encountered making project backups:', error=True)
+        raise exc
