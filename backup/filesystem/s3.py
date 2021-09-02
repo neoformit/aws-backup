@@ -10,7 +10,7 @@ from config import config
 logger = logging.getLogger(__name__)
 
 
-def read_files():
+def read_files(contains=None):
     """Read files listed under given S3 bucket path.
 
     Return a dict of {filename<string>: timestamp<datetime.datetime>}
@@ -30,6 +30,13 @@ def read_files():
         timestamp = datetime.strptime(' '.join(cols[:2]), '%Y-%m-%d %H:%M:%S')
         filename = cols[-1]
         files[filename] = timestamp
+
+    if contains:
+        files = {
+            k: v
+            for k, v in files.items()
+            if k.contains(contains)
+        }
 
     string_files = '\n'.join([
         f"{f} | {m.isoformat()}"

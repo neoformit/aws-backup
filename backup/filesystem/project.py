@@ -9,6 +9,7 @@ from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
 
 from config import config
+from backup.utils import tmp
 from . import dispatch, s3
 
 logger = logging.getLogger(__name__)
@@ -48,8 +49,8 @@ class ProjectBackup:
             if os.path.isdir(os.path.join(self.BASE_DIR, x))
         ]
         if log_file:
-            with open(log_file) as f:
-                f.write('# File paths backed up to S3 in last run\n')
+            with open(log_file, 'w') as f:
+                f.write('# Projects backed up to S3 in last run\n')
                 f.write(f'# {self.today}\n\n')
                 f.write('\n'.join(self.project_paths) + '\n')
 
@@ -102,7 +103,7 @@ class ProjectBackup:
             self.archives,
             config.S3_FILES_PATH,
         )
-        dispatch.cascade()
+        dispatch.cascade(self.project_paths)
 
     def get_backup_filepaths(self, dpath):
         """Return filtered list of file paths."""
@@ -149,7 +150,7 @@ class ProjectBackup:
 
     def tar(self, dpath, fpaths):
         """Compress files into a tar.gz archive."""
-        tarname = f'daily_{self.today}_{dpath}.tar.gz'
+        tarname = tmp(f'daily_{self.today}_{dpath}.tar.gz')
         try:
             with tarfile.open(tarname, 'w:gz') as tar:
                 for f in fpaths:

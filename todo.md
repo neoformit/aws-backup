@@ -4,6 +4,7 @@
   - [x] Backup/filesystem
   - [x] Backup/postgres
 - [x] Get logger working
-- [ ] Enable filesystem backups
-- [ ] Swap print for log statements
+- [x] Enable filesystem backups
+- [x] Swap print for log statements
+- [ ] Fix filesystem logic to cascade across projects
 - [ ] Testing with time-machine https://pypi.org/project/time-machine/

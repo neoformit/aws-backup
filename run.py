@@ -40,7 +40,7 @@ def set_args():
     """Parse command line arguments."""
     ap = ArgumentParser(description='Process some integers.')
     ap.add_argument(
-        '--dry-run',
+        '--dry',
         dest='dry_run',
         action='store_true',
         default=False,

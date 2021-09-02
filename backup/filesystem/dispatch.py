@@ -1,4 +1,8 @@
-"""Back up tar archives to AWS S3 and clean up old files."""
+"""Back up tar archives to AWS S3 and clean up old files.
+
+THIS WILL NOT CURRENTLY WORK ACROSS MULTIPLE PROJECT DIRS - THEY WILL ALL BE
+CASCADED AS ONE.
+"""
 
 import logging
 from datetime import date
@@ -11,21 +15,27 @@ from . import s3
 logger = logging.getLogger(__name__)
 
 
-def cascade():
+def cascade(project_paths):
+    """Perform backup cascading over all projects."""
+    for p in project_paths:
+        cascade_project(p)
+
+
+def cascade_project(project):
     """Run all cleanup operations to organise s3 backup archives."""
     today = date.today()
     if today.day == config.MONTHLY_BACKUP_DAY:
         logger.info(f"Month day {today.day}: PERFORMING MONTHLY CASCADE")
-        monthly_cleanup()
+        monthly_cleanup(project)
     if today.weekday() == config.WEEKLY_BACKUP_WEEKDAY:
         logger.info(f"Week day {today.weekday()}: PERFORMING WEEKLY CASCADE")
-        weekly_cleanup()
-    daily_cleanup()
+        weekly_cleanup(project)
+    daily_cleanup(project)
 
 
-def monthly_cleanup():
+def monthly_cleanup(project):
     """Move and delete backups to retain monthly backup archives."""
-    s3_files = s3.read_files()
+    s3_files = s3.read_files(contains=project)
 
     weekly = sorted([
         (f, m) for f, m in s3_files.items()
@@ -58,9 +68,9 @@ def monthly_cleanup():
             s3.remove(f)
 
 
-def weekly_cleanup():
+def weekly_cleanup(project):
     """Move and delete backups to retain weekly backup archives."""
-    s3_files = s3.read_files()
+    s3_files = s3.read_files(contains=project)
 
     daily = sorted([
         (f, m) for f, m in s3_files.items()
@@ -93,9 +103,9 @@ def weekly_cleanup():
             s3.remove(f)
 
 
-def daily_cleanup():
+def daily_cleanup(project):
     """Move and delete backups to retain daily backup archives."""
-    s3_files = s3.read_files()
+    s3_files = s3.read_files(contains=project)
 
     daily = sorted([
         (f, m) for f, m in s3_files.items()

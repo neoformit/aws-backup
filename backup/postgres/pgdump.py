@@ -7,6 +7,7 @@ import subprocess
 
 from . import s3
 from config import config
+from backup.utils import tmp
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +16,11 @@ def to_s3():
     """Make database dump with pg_dumpall."""
     today = datetime.date.today().strftime("%Y-%m-%d")
     fname = f"daily_{today}.sql.gz"
-    logger.info(f"Writing {config.DB_DUMP_CMD} to {fname}...")
+    fpath = tmp(fname)
+    logger.info(f"Writing {config.DB_DUMP_CMD} to {fpath}...")
 
-    with open(fname, 'wb', 1) as stream:
-        logger.debug(f"RUN: {config.DB_DUMP_CMD} | gzip > {fname}")
+    with open(fpath, 'wb', 1) as stream:
+        logger.debug(f"RUN: {config.DB_DUMP_CMD} | gzip > {fpath}")
         dump = subprocess.run(
             [config.DB_DUMP_CMD],
             check=True,
@@ -33,5 +35,5 @@ def to_s3():
         gzip.wait()
 
     dest = os.path.join(config.S3_POSTGRES_PATH, fname)
-    logger.info(f"Sending {fname} to {dest}...")
-    s3.move(fname, dest)
+    logger.info(f"Sending {fpath} to {dest}...")
+    s3.move(fpath, dest)

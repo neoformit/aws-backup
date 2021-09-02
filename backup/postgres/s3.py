@@ -34,7 +34,7 @@ def read(contains=None):
         files[filename] = timestamp
 
     if contains:
-        return {
+        files = {
             k: v for k, v in files.items()
             if contains in k
         }
