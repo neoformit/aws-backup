@@ -1,6 +1,7 @@
 """Back up specified paths from projects under BASE_DIR as tar archives."""
 
 import os
+import json
 import tarfile
 import logging
 from time import time
@@ -40,20 +41,23 @@ class ProjectBackup:
 
     def __init__(self, base_dir, log_file=None):
         """Create project backup and collect archive file names."""
-        self.log_file = log_file
         self.BASE_DIR = base_dir
         self.INITIAL = self.is_initial_global_backup()
+        self.log_file = log_file
+        self.paths_record_file = tmp('project_paths.json')
+        self.archived_project_paths = self.get_archived_paths()
         self.today = date.today().strftime('%Y-%m-%d')
 
-        self.project_paths = [
+        self.project_dirs = [
             x for x in os.listdir(self.BASE_DIR)
             if os.path.isdir(os.path.join(self.BASE_DIR, x))
         ]
+
         if self.log_file:
             with open(self.log_file, 'w') as f:
                 f.write(f'# Written {self.today}\n\n')
                 f.write('# Projects backed up to S3 in this run:\n')
-                f.write('\n'.join(self.project_paths) + '\n')
+                f.write('\n'.join(self.project_dirs) + '\n')
 
     def build_archives(self):
         """Create tarballs for all dirs in base_dir.
@@ -63,8 +67,9 @@ class ProjectBackup:
         Returns a list of relative paths for tar archives created.
         """
         archives = []
+        project_filepaths = {}
 
-        for dpath in self.project_paths:
+        for dpath in self.project_dirs:
             try:
                 fpaths = self.get_backup_filepaths(dpath)
                 if fpaths is None:
@@ -73,6 +78,8 @@ class ProjectBackup:
                         "no backup.paths file. Skipping..."
                     )
                     continue
+
+                project_filepaths[dpath] = fpaths
 
                 if self.log_file:
                     with open(self.log_file, 'a') as f:
@@ -86,7 +93,7 @@ class ProjectBackup:
                 logger.debug(f"Project: {dpath}")
 
                 if not (self.INITIAL or self.is_initial_project_backup(dpath)):
-                    if not self.files_modified(fpaths):
+                    if not self.files_modified(dpath, fpaths):
                         logger.info(
                             f"\nSkipping project {dpath}: no files modified")
                         continue
@@ -104,6 +111,9 @@ class ProjectBackup:
                 #     raise exc
                 raise exc
 
+        with open(self.paths_record_file, 'w') as f:
+            json.dump(project_filepaths, f)
+
         self.archives = archives
 
     def dispatch_to_s3(self):
@@ -112,7 +122,13 @@ class ProjectBackup:
             self.archives,
             config.S3_FILES_PATH,
         )
-        dispatch.cascade(self.project_paths)
+        dispatch.cascade(self.project_dirs)
+
+    def get_archived_paths(self):
+        """Return dict of filepaths backed up on last run."""
+        if os.path.exists(self.paths_record_file):
+            with open(self.paths_record_file) as f:
+                return json.load(f)
 
     def get_backup_filepaths(self, dpath):
         """Return filtered list of file paths."""
@@ -151,9 +167,24 @@ class ProjectBackup:
             return True
         return False
 
-    def files_modified(self, fpaths):
-        """Return True if files have been modified in last 25 hrs."""
+    def files_modified(self, dpath, fpaths):
+        """Check if files have been modified or created in last 25hrs."""
         one_day_ago = time() - 90000  # 25 hours ago
+
+        # Check if files created
+        if (not self.archived_project_paths or
+                dpath not in self.archived_project_paths):
+            # No record of backed-paths - assume that all filepaths are new
+            return True
+        new_files = set(fpaths) - set(self.archived_project_paths[dpath])
+        if new_files:
+            msg = f"File(s) created since last run: {new_files[0]}"
+            if len(new_files) > 1:
+                msg += f" (+ {len(new_files)} others)"
+            logger.debug(msg)
+            return True
+
+        # Check if files modified
         for f in fpaths:
             if os.path.getmtime(os.path.join(self.BASE_DIR, f)) > one_day_ago:
                 logger.debug(f"File modified in past 25hrs: {f}")

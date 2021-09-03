@@ -11,7 +11,7 @@ from datetime import date
 from config import config
 from . import postgres
 from .notifications import send_mail
-from .filesystem.project import ProjectBackup
+from .filesystem.projects import ProjectBackup
 
 logger = logging.getLogger(__name__)
 

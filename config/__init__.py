@@ -64,11 +64,10 @@ for p in required_paths:
 for c in required_commands:
     result = subprocess.run(
         ['which', c],
-        check=True,
         stdout=subprocess.DEVNULL,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"No such command: {c}")
+        raise RuntimeError(f"Command not found: {c}")
 
 
 # Logging configuration
