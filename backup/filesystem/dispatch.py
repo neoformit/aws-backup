@@ -39,7 +39,7 @@ def cascade_project(project):
         logger.info(80 * "-")
         weekly_cleanup(project)
     logger.info(80 * "-")
-    logger.info(f"PERFORMING DAILY BACKUP - {project}")
+    logger.info(f"PERFORMING FINAL CLEANUP - {project}")
     logger.info(80 * "-")
     daily_cleanup(project)
 
@@ -79,7 +79,9 @@ def monthly_cleanup(project):
 
     if len(monthly) > config.MONTHS:
         oldest = monthly[config.MONTHS:]
+        logger.info(f"Removing {len(oldest)} old archives:")
         for f, m in oldest:
+            logger.info(f"\t{f}")
             s3.remove(f)
 
 
@@ -118,7 +120,9 @@ def weekly_cleanup(project):
 
     if len(weekly) > config.WEEKS:
         oldest = weekly[config.WEEKS:]
+        logger.info(f"Removing {len(oldest)} old archives:")
         for f, m in oldest:
+            logger.info(f"\t{f}")
             s3.remove(f)
 
 
@@ -139,5 +143,7 @@ def daily_cleanup(project):
 
     if len(daily) > config.DAYS:
         oldest = daily[config.DAYS:]
+        logger.info(f"Removing {len(oldest)} old archives:")
         for f in oldest:
+            logger.info(f"\t{f}")
             s3.remove(f)

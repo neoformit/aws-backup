@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def make():
-    """Make the daily backup and clean up old backup files."""
+    """Clean up old daily backup files."""
     files = s3.read(contains=config.DAILY_PREFIX)
     logger.debug("Daily backup files currently in S3 storage:")
     for k, v in files.items():
@@ -25,13 +25,9 @@ def make():
     }
 
     if old_files:
-        logger.debug(
-            "Removing old files from S3 storage:\n"
-            + ' '.join(old_files.keys())
-            + '\n'
-        )
-        for fname, timestamp in old_files.items():
+        logger.info(f"Removing {len(old_files)} old archives:")
+        for fname in old_files:
+            logger.info(f"\t{fname}")
             s3.remove(fname)
-        logger.debug("Done")
     else:
         logger.debug("No old files to remove")

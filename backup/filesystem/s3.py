@@ -56,10 +56,15 @@ def read_files(contains=None):
 def store(filepaths, dest):
     """Send all files in filepaths[] to S3 storage under dest dir."""
     if not filepaths:
-        logger.debug("No FS archives to dispatch to S3")
+        logger.info("No FS archives to dispatch to S3")
         return
 
-    logger.debug(f"Dispatching {len(filepaths)} files to S3...")
+    logger.info(80 * '-')
+    logger.info(f"ARCHIVING {len(filepaths)} PROJECTS TO S3:")
+    for f in filepaths:
+        logger.info(f"\t{f}")
+    logger.info(80 * '-')
+
     for f in filepaths:
         d = os.path.join(dest, os.path.basename(f))
         move(f, d)

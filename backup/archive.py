@@ -9,6 +9,7 @@ import logging
 from datetime import date
 
 from config import config
+from .utils import log_section
 from . import postgres
 from .notifications import send_mail
 from .filesystem.projects import ProjectBackup
@@ -16,27 +17,31 @@ from .filesystem.projects import ProjectBackup
 logger = logging.getLogger(__name__)
 
 
-def pgdump():
+def make():
+    """Backup postgres cluster and project filesystems to AWS S3."""
+    log_section("MAKE DATABASE DUMP", major=True)
+    postgres.pgdump.to_s3()
+    log_section("CASCADE DATABASE ARCHIVES", major=True)
+    archive_database()
+    log_section("ARCHIVE FILESYSTEM", major=True)
+    archive_filesystem()
+
+
+def archive_database():
     """Run backup cascade."""
     today = date.today()
 
     try:
         if today.day == config.MONTHLY_BACKUP_DAY:
-            logger.info(80 * '-')
-            logger.info(f"Month day {today.day}: PERFORMING MONTHLY CASCADE")
-            logger.info(80 * '-')
+            log_section(f"Month day {today.day}: PERFORMING MONTHLY CASCADE")
             postgres.monthly.make()
 
         if today.weekday() == config.WEEKLY_BACKUP_WEEKDAY:
-            logger.info(80 * '-')
-            logger.info(
+            log_section(
                 f"Week day {today.weekday()}: PERFORMING WEEKLY CASCADE")
-            logger.info(80 * '-')
             postgres.weekly.make()
 
-        logger.info(80 * '-')
-        logger.info('CASCADING DAILY BACKUPS')
-        logger.info(80 * '-')
+        log_section('PERFORMING FINAL CLEANUP')
         postgres.daily.make()
 
     except Exception as exc:
@@ -44,7 +49,7 @@ def pgdump():
         raise exc
 
 
-def files():
+def archive_filesystem():
     """Backup filesystem to S3."""
     try:
         pb = ProjectBackup(
