@@ -208,4 +208,4 @@ class ProjectBackup:
 
 if __name__ == '__main__':
     backup = ProjectBackup('code')
-    print(f"\nBackups created: {backup.archives}")
+    print(f"\nBackup created: {backup.archives}")
