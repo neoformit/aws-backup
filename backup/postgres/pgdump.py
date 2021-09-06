@@ -21,7 +21,8 @@ def to_s3():
         fpath = tmp(fname)
         logger.info(f"Writing {config.DB_DUMP_CMD} to {fpath}...")
         logger.debug(
-            f"RUN:\n\t$sudo -u postgres {config.DB_DUMP_CMD} | gzip > {fpath}")
+            f"RUN:\n\t$ sudo -u postgres {config.DB_DUMP_CMD}"
+            f" | gzip > {fpath}")
 
         dump = subprocess.Popen(
             ['sudo', '-u', 'postgres', config.DB_DUMP_CMD],

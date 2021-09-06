@@ -6,8 +6,8 @@ with cascading daily, weekly and monthly backups.
 ## A few assumptions:
 - You have access to an AWS S3 bucket
 - You schedule this program to run with `cron` on linux
-- You have `python>=3.6` accessible to `/usr/bin/env`
-- You have installed `virtualenv` to create a virtual environment
+- The scheduling user has passwordless `sudo` access to call `sudo -u postgres pg_dumpall` 
+- You have `python>=3.6` and `pip3` accessible to `/usr/bin/env`
 - You have deployed a set of projects on the host machine which are writing to a PostgreSQL database cluster
 - These projects may also have files that you wish to be backed up (e.g. media files, data uploads)
 - There is suffient disk space in the working directory to create temporary DB dumps and filesystem tarballs
@@ -17,14 +17,16 @@ with cascading daily, weekly and monthly backups.
 
 ```sh
 git clone https://github.com/neoformit/aws-backup.git
-virtualenv --python=`which python3` venv
+pip3 install virtualenv
+python3 -m virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-- Configure `awscli` with your user credentials ((instructions here)[https://linuxhint.com/install_aws_cli_ubuntu/])
-- Copy `config.yml.sample` to `config.yml` and modify to suit your requirements
-- Run `crontab -e` and add the following line, replacing PWD with the repository path:
+1. Configure `awscli` with your user credentials ((instructions here)[https://linuxhint.com/install_aws_cli_ubuntu/])
+2. Copy `config.yml.sample` to `config.yml` and modify to suit your requirements
+3. Switch to a user (`sudo su <user>`) with passwordless `sudo` (could use root)
+4. Run `crontab -e` and add the following line, replacing PWD with the repository path:
     `3 0 * * *    source <PWD>/venv/bin/activate && <PWD>/run.py`
 
 

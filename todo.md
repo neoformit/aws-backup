@@ -6,5 +6,7 @@
 - [x] Get logger working
 - [x] Enable filesystem backups
 - [x] Swap print for log statements
-- [ ] Fix filesystem logic to cascade across projects
+- [x] Fix filesystem logic to cascade across projects
+- [ ] Catch project archive error, email notification and continue
 - [ ] Testing with time-machine https://pypi.org/project/time-machine/
+- [ ] Catch and handle permission errors reading FS paths?

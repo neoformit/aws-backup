@@ -21,7 +21,7 @@ def read(contains=None):
         'ls',
         config.S3_POSTGRES_PATH,
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     files = {}
     result = subprocess.run(
         args,
@@ -63,7 +63,7 @@ def move(source, dest):
         source,
         dest,
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     if config.DRY_RUN:
         return
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
@@ -78,7 +78,7 @@ def copy(source, dest):
         source,
         dest,
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     if config.DRY_RUN:
         return
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
@@ -92,7 +92,7 @@ def remove(path):
         'rm',
         os.path.join(config.S3_POSTGRES_PATH, path),
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     if config.DRY_RUN:
         return
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)

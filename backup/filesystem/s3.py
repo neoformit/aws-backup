@@ -21,7 +21,7 @@ def read_files(contains=None):
         'ls',
         config.S3_FILES_PATH,
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     result = subprocess.run(
         args,
         stdout=subprocess.PIPE,
@@ -79,7 +79,7 @@ def copy(src, dest):
         os.path.join(config.S3_FILES_PATH, src),
         os.path.join(config.S3_FILES_PATH, dest)
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     if config.DRY_RUN:
         return
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
@@ -94,7 +94,7 @@ def move(src, dest):
         src,
         dest,
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     if config.DRY_RUN:
         return
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)
@@ -108,7 +108,7 @@ def remove(path):
         'rm',
         os.path.join(config.S3_FILES_PATH, path)
     ]
-    logger.debug(f"RUN:\n\t${' '.join(args)}")
+    logger.debug(f"RUN:\n\t$ {' '.join(args)}")
     if config.DRY_RUN:
         return
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL)

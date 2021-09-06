@@ -74,8 +74,8 @@ class ProjectBackup:
                 fpaths = self.get_backup_filepaths(dpath)
                 if fpaths is None:
                     logger.debug(
-                        f"\nProject {dpath}:",
-                        "no backup.paths file. Skipping..."
+                        f"\nProject {dpath}:"
+                        " no backup.paths file. Skipping..."
                     )
                     continue
 
