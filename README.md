@@ -6,7 +6,7 @@ with cascading daily, weekly and monthly backups.
 ## A few assumptions:
 - You have access to an AWS S3 bucket
 - You schedule this program to run with `cron` on linux
-- The scheduling user has passwordless `sudo` access to call `sudo -u postgres pg_dumpall` 
+- The scheduling user has passwordless `sudo` access to call `sudo -u postgres pg_dumpall`
 - You have `python>=3.6` and `pip3` accessible to `/usr/bin/env`
 - You have deployed a set of projects on the host machine which are writing to a PostgreSQL database cluster
 - These projects may also have files that you wish to be backed up (e.g. media files, data uploads)
@@ -14,6 +14,8 @@ with cascading daily, weekly and monthly backups.
 
 
 ## Setup
+
+**Install and setup**
 
 ```sh
 git clone https://github.com/neoformit/aws-backup.git
@@ -23,12 +25,22 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+**Configuration**
+
 1. Configure `awscli` with your user credentials ((instructions here)[https://linuxhint.com/install_aws_cli_ubuntu/])
 2. Copy `config.yml.sample` to `config.yml` and modify to suit your requirements
 3. Switch to a user (`sudo su <user>`) with passwordless `sudo` (could use root)
-4. Run `crontab -e` and add the following line, replacing PWD with the repository path:
+4. Add a `backup.paths` file to each project root directory
+5. Try a test run to ensure it's working as expected
+6. Run `crontab -e` and add the following line, replacing PWD with the repository path:
     `3 0 * * *    source <PWD>/venv/bin/activate && <PWD>/run.py`
 
+**Test run**
+
+```sh
+# This won't send anything to AWS but will create archives under $WDIR/tmp/
+./run.py --dry --initial --verbose
+```
 
 ## How it works
 

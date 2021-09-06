@@ -26,6 +26,12 @@ def make():
     log_section("ARCHIVE FILESYSTEM", major=True)
     archive_filesystem()
 
+    # Add divider to log file
+    logger.info(
+        "Daily backup cascade complete\n\n\n"
+        + "~" * 80
+        + '\n\n')
+
 
 def archive_database():
     """Run backup cascade."""
