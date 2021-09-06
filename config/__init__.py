@@ -27,6 +27,11 @@ class Config:
         for k, v in new.items():
             if hasattr(self, k):
                 setattr(self, k, v)
+        if 'DEBUG' in new:
+            # Update log level
+            log_level = logging.DEBUG if self.DEBUG else logging.INFO
+            logging.root.setLevel(log_level)
+            logger.info(f"Log level set to {log_level}")
 
 
 # Read in YAML configuration
@@ -104,3 +109,4 @@ logging.config.dictConfig({
 })
 log_level = logging.DEBUG if config.DEBUG else logging.INFO
 logging.root.setLevel(log_level)
+logger.info(f"Log level set to {log_level}")
