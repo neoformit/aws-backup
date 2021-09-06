@@ -9,6 +9,11 @@ Schedule can be configured with config.yml
 - Send the compressed dump archives to configured AWS S3 storage locations
 - Rename and delete objects on AWS to maintain daily, weekly and monthly
   backups as per configuration (AKA "cascade").
+
+Execution of this file should be scheduled to run with Cron or similar at the
+same time every day.
+
+Set run parameters in `config.yml` e.g. day-of-month to take monthly backup.
 """
 
 import os
