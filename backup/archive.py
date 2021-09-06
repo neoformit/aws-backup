@@ -5,6 +5,7 @@
 Dispatch to AWS S3.
 """
 
+import os
 import logging
 from datetime import date
 
@@ -58,9 +59,12 @@ def archive_database():
 def archive_filesystem():
     """Backup filesystem to S3."""
     try:
+        log_file_path = os.path.join(
+            config.LOG_FILE_DIR,
+            config.FILESYSTEM_BACKUP_PATHS_LOG)
         pb = ProjectBackup(
             config.FILESYSTEM_PROJECT_ROOT,
-            log_file=config.FILESYSTEM_BACKUP_PATHS_LOG,
+            log_file=log_file_path,
         )
         pb.build_archives()
         pb.dispatch_to_s3()
