@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ```
 
 - Configure `awscli` with your user credentials ((instructions here)[https://linuxhint.com/install_aws_cli_ubuntu/])
-- Modify `config.yml` to suit your requirements
+- Copy `config.yml.sample` to `config.yml` and modify to suit your requirements
 - Run `crontab -e` and add the following line, replacing PWD with the repository path:
     `3 0 * * *    source <PWD>/venv/bin/activate && <PWD>/run.py`
 

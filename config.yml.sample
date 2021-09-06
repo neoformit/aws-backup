@@ -3,14 +3,14 @@
 
 # These three can be overridden with CLI flags:
 DEBUG: False        # Verbose log output
-DRY_RUN: False
-INITIAL: False
+DRY_RUN: False      # Don't send to remote. Log output and create tmp files.
+INITIAL: False      # Force project backup - ignore timestamps
 
 # Environment
 AWS_CMD: 'aws'
 DB_DUMP_CMD: 'pg_dumpall'
-WORKING_DIR: '/home/user/backups' # Defaults to pwd
-LOG_FILE_DIR: ''                  # Defaults to wdir
+WORKING_DIR: ''     # Defaults to pwd
+LOG_FILE_DIR: ''    # Defaults to wdir
 
 # Mail settings
 EMAIL_HOSTNAME: ''  # Will default to
@@ -18,7 +18,7 @@ EMAIL_PASSWORD: ''  # console mail handler if
 EMAIL_USERNAME: ''  # any of these fields are empty
 EMAIL_RECIPIENT: ''
 
-# FS backups will be indexed recursively from this dir
+# All subdirs of this dir will be considered as "projects" for FS backup
 FILESYSTEM_PROJECT_ROOT: '/home/user/projects'
 # FS backup paths will be written here
 FILESYSTEM_BACKUP_PATHS_LOG: 'backup.paths.log'
@@ -33,12 +33,12 @@ WEEKS: 4
 MONTHS: 6
 
 # Day of week for weekly backup (0-6 : Mon-Sun)
-WEEKLY_BACKUP_WEEKDAY: 5
+WEEKLY_BACKUP_WEEKDAY: 5  # Saturday
 
 # Day of month for monthly backup ( =< 28)
-MONTHLY_BACKUP_DAY: 1
+MONTHLY_BACKUP_DAY: 1     # 1st of every month
 
-# Prefixes to identify backup files by level
+# Filename prefixes to identify backup archives by level
 DAILY_PREFIX: 'daily'
 WEEKLY_PREFIX: 'weekly'
 MONTHLY_PREFIX: 'monthly'
