@@ -95,7 +95,7 @@ class ProjectBackup:
                 if not (self.INITIAL or self.is_initial_project_backup(dpath)):
                     if not self.files_modified(dpath, fpaths):
                         logger.info(
-                            f"\nSkipping project {dpath}: no files modified")
+                            f"Skipping project {dpath}: no files modified")
                         continue
 
                 logger.debug("Making backup...")
