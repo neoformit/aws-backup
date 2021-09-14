@@ -1,6 +1,7 @@
 # Project specific
 *.sql.gz
 *.sql
+*.out
 config.yml
 tmp/
 
