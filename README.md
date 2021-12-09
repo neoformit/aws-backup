@@ -15,7 +15,7 @@ with cascading daily, weekly and monthly backups.
 
 ## Setup
 
-**Install and setup**
+**Installation with virtualenv**
 
 ```sh
 git clone https://github.com/neoformit/aws-backup.git
@@ -27,13 +27,15 @@ pip install -r requirements.txt
 
 **Configuration**
 
-1. Configure `awscli` with your user credentials ((instructions here)[https://linuxhint.com/install_aws_cli_ubuntu/])
+> Be sure to run under a user (`sudo su <user>`) that has passwordless `sudo` (could possibly use root).
+
+1. Configure `awscli` with your user credentials - [instructions here](https://linuxhint.com/install_aws_cli_ubuntu/)
 2. Copy `config.yml.sample` to `config.yml` and modify to suit your requirements
-3. Switch to a user (`sudo su <user>`) with passwordless `sudo` (could use root)
-4. Add a `backup.paths` file to each project root directory
-5. Try a test run to ensure it's working as expected
-6. Run `crontab -e` and add the following line, replacing PWD with the repository path:
-    `3 0 * * *    source <PWD>/venv/bin/activate && <PWD>/run.py`
+3. **Configure FS paths:** Add a `backup.paths` file to each project root directory (`.gitignore` syntax)
+4. **Test run:** check intentions are as expected (see below)
+5. **Schedule:** Open `crontab -e` and add the following line, replacing `PWD` with the repository path (to run at 3am):
+
+    `0 3 * * *    source <PWD>/venv/bin/activate && <PWD>/run.py`
 
 **Test run**
 
@@ -41,6 +43,8 @@ pip install -r requirements.txt
 # This won't send anything to AWS but will create archives under $WDIR/tmp/
 ./run.py --dry --initial --verbose
 ```
+
+---
 
 ## How it works
 
