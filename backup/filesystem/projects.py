@@ -178,9 +178,7 @@ class ProjectBackup:
             return True
         new_files = set(fpaths) - set(self.archived_project_paths[dpath])
         if new_files:
-            msg = f"File(s) created since last run: {new_files[0]}"
-            if len(new_files) > 1:
-                msg += f" (+ {len(new_files)} others)"
+            msg = "File(s) created since last run:/n%s" % '\n'.join(new_files)
             logger.debug(msg)
             return True
 
